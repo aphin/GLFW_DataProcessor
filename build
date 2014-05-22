@@ -1,0 +1,4 @@
+#! /bin/bash
+
+gcc -g -o glfwb glfwb.c -lGL -lGLU -lglfw3 -lX11 -lXxf86vm -lXrandr -lpthread -lXi -lm
+
