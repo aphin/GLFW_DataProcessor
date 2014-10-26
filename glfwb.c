@@ -619,7 +619,7 @@ void Draw( void )
         DrawText(ss,Font,-1.0F,0.8F,hscale,vscale*0.9f);
         sprintf(ss,"POS = %02d:%02d:%02d", cpos/3600, (cpos%3600)/60, (cpos%3600)%60);
         DrawText(ss,Font,-1.0F,0.75F,hscale,vscale*0.9f);
-        sprintf(ss,"V1 = %f; V2 = %f",data[cpos][0],data[cpos][1]);
+        sprintf(ss,"V1 = %d; V2 = %f",undo_count,data[cpos][1]);
 //        sprintf(ss,"KEY = %X", key_code);
         DrawText(ss,Font,-1.0F,0.7F,hscale,vscale*0.9f);
 // bottom status bar drawing
@@ -1109,6 +1109,11 @@ void make_undo(unsigned char sv_flg)
                 undo[i][1][j] = undo[i][1][j+1];
             }
         }
+        for (i=0;i<86400;i++)
+        {
+            undo[i][0][undo_count]=data[i][0];
+            undo[i][1][undo_count]=data[i][1];
+        }
     }
     if ((sv_flg>0)&&(undo_count<19))
     {
@@ -1560,7 +1565,7 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
                         if (wnd_part < 1) { wnd_part=1; }
                         make_estimation();
                     }
-                    if ((selected==2)&&((est_type==8)||(est_type=9)))
+                    if ((selected==2)&&((est_type==8)||(est_type==9)))
                     {
                         vf -= vinc;
                         vt -= vinc;
