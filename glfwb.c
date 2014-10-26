@@ -619,7 +619,7 @@ void Draw( void )
         DrawText(ss,Font,-1.0F,0.8F,hscale,vscale*0.9f);
         sprintf(ss,"POS = %02d:%02d:%02d", cpos/3600, (cpos%3600)/60, (cpos%3600)%60);
         DrawText(ss,Font,-1.0F,0.75F,hscale,vscale*0.9f);
-        sprintf(ss,"V1 = %d; V2 = %f",undo_count,data[cpos][1]);
+        sprintf(ss,"V1 = %f; V2 = %f",data[cpos][0],data[cpos][1]);
 //        sprintf(ss,"KEY = %X", key_code);
         DrawText(ss,Font,-1.0F,0.7F,hscale,vscale*0.9f);
 // bottom status bar drawing
@@ -699,8 +699,8 @@ void Draw( void )
 			glBegin(GL_QUADS);
 			glVertex2f(0.6+((float)i*0.005),1.0-((float)i*0.005));
 			glVertex2f(1.0-((float)i*0.005),1.0-((float)i*0.005));
-			glVertex2f(1.0-((float)i*0.005),0.2+((float)i*0.005));
-			glVertex2f(0.6+((float)i*0.005),0.2+((float)i*0.005));
+			glVertex2f(1.0-((float)i*0.005),0.1+((float)i*0.005));
+			glVertex2f(0.6+((float)i*0.005),0.1+((float)i*0.005));
 			glEnd();
 		}
 		glDisable(GL_BLEND);
@@ -724,6 +724,8 @@ void Draw( void )
   		DrawText("F4 - 12 hour per screen zoom",Font,0.65,0.35,h,v);
   		DrawText("T - edit values immediately",Font,0.65,0.3,h,v);
   		DrawText("Ctrl-A - select all",Font,0.65,0.25,h,v);
+  		DrawText("Ctrl-0 - Discard odd",Font,0.65,0.2,h,v);
+  		DrawText("Ctrl-1 - Discard even",Font,0.65,0.15,h,v);
     }
 
     if (fBusy == 1)
@@ -1445,6 +1447,30 @@ void load_zero_points()
 	fBusy=0;
 }
 
+void discard_part(int poe)
+{
+	if (nzp >= 2)
+	{
+		fBusy=1;
+		make_undo(1);
+		int i=0;
+		est_type = 1;
+		while (i<nzp)
+		{
+			if ((zp[i][4] == poe)&&((i+1)<nzp))	cActive=1;
+			if ((zp[i][4] == (1-poe))&&((i+1)<nzp)) cActive=2;
+			sel_beg = zp[i][0];
+			sel_end = zp[i+1][1];
+			selected = 2;
+			make_estimation();
+			int k;
+			for (k=sel_beg;k<sel_end;k++) data[k][cActive-1] = data[k][cActive+1];
+			i++;
+		}
+		fBusy=0;
+	}
+}
+
 void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
 {
     if ((action == GLFW_PRESS)||(action == GLFW_REPEAT))
@@ -1591,6 +1617,9 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
                 break;
             }
             case GLFW_KEY_1:
+            {
+				if (mods==GLFW_MOD_CONTROL) discard_part(1);
+			}
             case GLFW_KEY_2:
             case GLFW_KEY_3:
             case GLFW_KEY_4:
@@ -1608,7 +1637,8 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
             }
             case GLFW_KEY_0:
             {
-                est_type = 0;
+                if (mods==0) est_type = 0;
+				if (mods==GLFW_MOD_CONTROL) discard_part(0);
                 break;
             }
             case GLFW_KEY_C:
